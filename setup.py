@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='teether',
-    version='0.1',
-    packages=['teether'],
+    version='0.1.1',
+    packages=find_packages(),
     install_requires=[
         'z3-solver>=4.8.0.0',
         'pysha3>=1.0.2'
