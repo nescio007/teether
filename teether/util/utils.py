@@ -49,6 +49,8 @@ def log2(x):
     return i
 
 
+def to_signed(i):
+    return i if i < TT255 else i - TT256
 
 
 

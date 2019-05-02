@@ -119,6 +119,15 @@ def run(program, state=None, code=None, ctx=None, check_initialized=False, trace
                     stk.append(0)
                 else:
                     stk.append((s1 // 256 ** (31 - s0)) % 256)
+            elif op == 'SHL':
+                s0, s1 = stk.pop(), stk.pop()
+                stk.append((s1 << s0))
+            elif op == 'SHR':
+                s0, s1 = stk.pop(), stk.pop()
+                stk.append((s1 >> s0))
+            elif op == 'SAR':
+                s0, s1 = stk.pop(), teether.util.utils.to_signed(stk.pop())
+                stk.append((s1 >> s0))
         # SHA3 and environment info
         elif opcode < 0x40:
             if op == 'SHA3':
@@ -481,6 +490,19 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
                                 stk.append(z3.ZeroExt(256 - 32, v))
                 else:
                     raise SymbolicError('symbolic byte-index not supported')
+            elif op == 'SHL':
+                s0, s1 = stk.pop(), stk.pop()
+                stk.append((s1 << s0))
+            elif op == 'SHR':
+                s0, s1 = stk.pop(), stk.pop()
+                if concrete(s1) and concrete(s0):
+                    stk.append((s1 >> s0))
+                else:
+                    stk.append(z3.LShR(s1, s0))
+
+            elif op == 'SAR':
+                s0, s1 = stk.pop(), teether.util.utils.to_signed(stk.pop())
+                stk.append((s1 >> s0))
         # SHA3 and environment info
         elif opcode < 0x40:
             if op == 'SHA3':
