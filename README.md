@@ -11,6 +11,11 @@ It can
 
 ## Quickstart
 
+1. Install `teEther`
+```bash
+python setup.py install
+```
+
 1. Write your vulnerable smart contract
 ```solidity
 pragma solidity ^0.4.0;
