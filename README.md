@@ -16,7 +16,7 @@ It can
 python setup.py install
 ```
 
-1. Write your vulnerable smart contract
+2. Write your vulnerable smart contract
 ```solidity
 pragma solidity ^0.4.0;
 
@@ -53,17 +53,17 @@ contract Test{
 }
 ```
 
-2. Compile your contract
+3. Compile your contract
 ```
 $ solc --bin test.sol | tail -n1 > test.code
 ```
 
-3. Extract the deployed contract code
+4. Extract the deployed contract code
 ```
 $ python bin/extract_contract_code.py test.code > test.contract.code
 ```
 
-4. Generate an exploit
+5. Generate an exploit
 ```
 $ python bin/gen_exploit.py test.contract.code 0x1234 0x1000 +1000
 
