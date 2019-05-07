@@ -35,6 +35,10 @@ def bytes_to_int(value):
     return big_endian_to_int(bytes(value))
 
 
+def bytearray_to_int(value):
+    return bytes_to_int(bytearray_to_bytestr(value))
+
+
 def is_pow2(x):
     return x and not x & (x - 1)
 

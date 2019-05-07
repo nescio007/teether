@@ -57,13 +57,13 @@ def generate_BBs_recursive(code):
             new_links = False
             for bb in resolve_later:
                 _, new_succs = bb.get_succ_addrs_full(valid_jump_targets)
-                for s in new_succs:
+                for _, s in new_succs:
                     new_links = True
                     todo.append((bb.start, s))
             if not new_links:
                 break
         p, i = todo.popleft()
-        pred = bbs[p] if not p is None else None
+        pred = bbs[p] if p is not None else None
 
         if i in bbs:
             bb = bbs[i]
