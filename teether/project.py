@@ -93,7 +93,7 @@ class Project(object):
                 dd = self.cfg.data_dependence(self.cfg._ins_at[e.trace[-1]])
                 if not any(i.name in ('MLOAD', 'SLOAD') for i in dd):
                     ddbbs = set(i.bb.start for i in dd)
-                    bad_path_start = next(j for j, i in enumerate(bad_path) if i in ddbbs)
+                    bad_path_start = next((j for j, i in enumerate(bad_path) if i in ddbbs), 0)
                     bad_path = bad_path[bad_path_start:]
                 logging.info("Bad path: %s" % (', '.join('%x' % i for i in bad_path)))
                 exp.add_to_blacklist(bad_path)

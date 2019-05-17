@@ -344,7 +344,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
         elif opcode < 0x10:
             if op == 'STOP':
                 if path:
-                    raise IntractablePath()
+                    raise IntractablePath(state.trace, path)
                 state.success = True
                 return SymbolicResult(xid, state, constraints, sha_constraints)
             elif op == 'ADD':
