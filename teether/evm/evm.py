@@ -346,7 +346,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
                 if path:
                     raise IntractablePath(state.trace, path)
                 state.success = True
-                return SymbolicResult(xid, state, constraints, sha_constraints)
+                return SymbolicResult(xid, state, constraints, sha_constraints, target_op)
             elif op == 'ADD':
                 stk.append(stk.pop() + stk.pop())
             elif op == 'SUB':
@@ -781,7 +781,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
             state.success = True
             if path:
                 raise IntractablePath(state.trace, path)
-            return SymbolicResult(xid, state, constraints, sha_constraints)
+            return SymbolicResult(xid, state, constraints, sha_constraints, target_op)
         # Revert opcode (Metropolis)
         elif op == 'REVERT':
             s0, s1 = stk.pop(), stk.pop()
@@ -790,18 +790,18 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
             mem.extend(s0, s1)
             if path:
                 raise IntractablePath(state.trace, path)
-            return SymbolicResult(xid, state, constraints, sha_constraints)
+            return SymbolicResult(xid, state, constraints, sha_constraints, target_op)
         # SELFDESTRUCT opcode (also called SELFDESTRUCT)
         elif op == 'SELFDESTRUCT':
             s0 = stk.pop()
             state.success = True
             if path:
                 raise IntractablePath(state.trace, path)
-            return SymbolicResult(xid, state, constraints, sha_constraints)
+            return SymbolicResult(xid, state, constraints, sha_constraints, target_op)
 
         state.pc += 1
 
     if path:
         raise IntractablePath(state.trace, path)
     state.success = True
-    return SymbolicResult(xid, state, constraints, sha_constraints)
+    return SymbolicResult(xid, state, constraints, sha_constraints, target_op)
