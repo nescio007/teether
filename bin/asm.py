@@ -22,7 +22,7 @@ def assemble(code):
             if tokens[0] not in teether.cfg.opcodes.reverse_opcodes:
                 print('Unknown instruction "%s"' % tokens[0], file=sys.stderr)
                 continue
-            instructions.append((chr(teether.cfg.opcodes.reverse_opcodes[tokens[0]]), '', label))
+            instructions.append((teether.cfg.opcodes.reverse_opcodes[tokens[0]], b'', label))
         elif tokens[0] == 'PUSH':
             if tokens[1].startswith('@'):
                 ref_label = tokens[1][1:]
@@ -37,12 +37,12 @@ def assemble(code):
                     hex_v = '0' + hex_v
                 v_size = len(hex_v) / 2
                 instructions.append(
-                    (chr(teether.cfg.opcodes.reverse_opcodes['PUSH%d' % v_size]), bytes.fromhex(hex_v), label))
+                    (teether.cfg.opcodes.reverse_opcodes['PUSH%d' % v_size], bytes.fromhex(hex_v), label))
     refsize = 1
-    while sum(len(i) + len(a) if i != 'REFPUSH' else 1 + refsize for i, a, l in instructions) >= 256 ** refsize:
+    while sum(1 + len(a) if i != 'REFPUSH' else 1 + refsize for i, a, l in instructions) >= 256 ** refsize:
         refsize += 1
     mask = '%%0%dx' % (refsize * 2)
-    code = ''
+    code = b''
     labels = {}
     pc = 0
     for i, a, l in instructions:
@@ -55,9 +55,9 @@ def assemble(code):
 
     for i, a, l in instructions:
         if i == 'REFPUSH':
-            i = chr(teether.cfg.opcodes.reverse_opcodes['PUSH%d' % refsize])
+            i = teether.cfg.opcodes.reverse_opcodes['PUSH%d' % refsize]
             a = bytes.fromhex(mask % labels[a])
-        code += i + a
+        code += bytes([i, *a])
     return code
 
 
