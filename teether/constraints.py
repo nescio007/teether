@@ -38,7 +38,7 @@ def model_to_calls(model, idx_dict):
     calls = defaultdict(dict)
     for v in model:
         name = v.name()
-        if name.split('_')[0] not in ('CALLDATASIZE', 'CALLDATA', 'CALLVALUE', 'CALLER'):
+        if name.split('_')[0] not in ('CALLDATASIZE', 'CALLDATA', 'CALLVALUE', 'CALLER', 'ORIGIN'):
             continue
         call_index = idx_dict[get_level(name)]
         call = calls[call_index]
@@ -54,6 +54,8 @@ def model_to_calls(model, idx_dict):
             call['value'] = model[v].as_long()
         elif name.startswith('CALLER'):
             call['caller'] = model[v].as_long()
+        elif name.startswith('ORIGIN'):
+            call['origin'] = model[v].as_long()
         else:
             logging.warning('CANNOT CONVERT %s', name)
 

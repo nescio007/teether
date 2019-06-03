@@ -538,6 +538,8 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
                     stk.append(ctx_or_symbolic('BALANCE-%x' % s0, ctx, xid))
                 elif is_true(addr(s0) == addr(ctx_or_symbolic('ADDRESS', ctx, xid))):
                     stk.append(state.balance)
+                elif is_true(addr(s0) == addr(ctx_or_symbolic('ORIGIN', ctx, xid))):
+                    stk.append(ctx_or_symbolic('BALANCE-ORIGIN', ctx, xid))
                 elif is_true(addr(s0) == addr(ctx_or_symbolic('CALLER', ctx, xid))):
                     stk.append(ctx_or_symbolic('BALANCE-CALLER', ctx, xid))
                 else:
