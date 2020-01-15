@@ -48,15 +48,15 @@ class BB(object):
         self.ancestors = set()
         self.descendants = set()
         # maintain a set of 'must_visit' constraints to limit
-        # backward-slices to only new slices after new egdes are added
-        # initialliy, no constraint is given (= empty set)
+        # backward-slices to only new slices after new edges are added
+        # initially, no constraint is given (= empty set)
         self.must_visit = [set()]
         # also maintain an estimate of how fast we can get from here
         # to the root of the cfg
         # how fast meaning, how many JUMPI-branches we have to take
         self.estimate_constraints = (1 if self.branch else 0) if self.start == 0 else None
         # and another estimate fo many backwards branches
-        # we will encouter to the root
+        # we will encounter to the root
         self.estimate_back_branches = 0 if self.start == 0 else None
 
     @property
@@ -142,6 +142,7 @@ class BB(object):
                     try:
                         succ_addr = run(p, check_initialized=True).stack.pop()
                     except (ExternalData, UninitializedRead):
+                        logging.warning('Failed to compute jump target for BB@{}, slice: \n{}'.format(self.start, '\n'.join('\t{}'.format(ins) for ins in b)))
                         continue
                 if succ_addr not in valid_jump_targets:
                     logging.warning('Jump to invalid address')
