@@ -17,14 +17,8 @@ class UnresolvedConstraints(Exception):
         self.unresolved = unresolved
 
 
-def array_to_array(array_model, length=0):
-    l = array_model.as_list()
-    entries, else_value = l[:-1], l[-1]
-    length = max(max(e[0].as_long() for e in entries) + 1, length)
-    arr = [else_value.as_long()] * length
-    for e in entries:
-        arr[e[0].as_long()] = e[1].as_long()
-    return arr
+def array_to_array(model, array, length):
+    return bytes([model.eval(array[i]).as_long() for i in range(length)])
 
 
 def get_level(name):
@@ -36,28 +30,35 @@ def get_level(name):
 
 def model_to_calls(model, idx_dict):
     calls = defaultdict(dict)
-    for v in model:
-        name = v.name()
+    for vref in model:
+        name = vref.name()
+        v = model[vref]
         if name.split('_')[0] not in ('CALLDATASIZE', 'CALLDATA', 'CALLVALUE', 'CALLER', 'ORIGIN'):
             continue
         call_index = idx_dict[get_level(name)]
         call = calls[call_index]
         if name.startswith('CALLDATASIZE'):
-            payload_size = model[v].as_long()
+            payload_size = model.eval(v).as_long()
             call['payload_size'] = payload_size
         elif name.startswith('CALLDATA'):
-            call['payload'] = bytes(array_to_array(model[v]))
-            if 'payload_size' in call:
-                call['payload'] = call['payload'][:payload_size]
-                del call['payload_size']
+            call['payload_model'] = v
         elif name.startswith('CALLVALUE'):
-            call['value'] = model[v].as_long()
+            call['value'] = model.eval(v).as_long()
         elif name.startswith('CALLER'):
-            call['caller'] = model[v].as_long()
+            call['caller'] = model.eval(v).as_long()
         elif name.startswith('ORIGIN'):
-            call['origin'] = model[v].as_long()
+            call['origin'] = model.eval(v).as_long()
         else:
             logging.warning('CANNOT CONVERT %s', name)
+
+    for call in calls.values():
+        if 'payload_model' not in call:
+            call['payload'] = bytes()
+        else:
+            assert 'payload_size' in call
+            call['payload'] = array_to_array(model, call['payload_model'], call['payload_size'])
+        call.pop('payload_size', None)
+        call.pop('payload_model', None)
 
     return [v for k, v in sorted(calls.items())]
 
@@ -114,7 +115,6 @@ def check_model_and_resolve_inner(constraints, sha_constraints, second_try=False
     # logging.debug('-' * 32)
     extra_constraints = []
     s = z3.SolverFor("QF_ABV")
-    z3.set_option(model_compress=False)
     s.add(constraints)
     if s.check() != z3.sat:
         raise IntractablePath("CHECK", "MODEL")
@@ -130,7 +130,6 @@ def check_model_and_resolve_inner(constraints, sha_constraints, second_try=False
                 ne_constraints.append(a != b)
                 continue
             s = z3.SolverFor("QF_ABV")
-            z3.set_option(model_compress=False)
             s.add(constraints + ne_constraints + extra_constraints + [a != b, symread_neq(sha_constraints[a],
                                                                                           sha_constraints[b])])
             check_result = s.check()
@@ -162,7 +161,6 @@ def check_and_model(constraints, sha_constraints, ne_constraints, second_try=Fal
 
     unresolved = set(sha_constraints.keys())
     sol = z3.SolverFor("QF_ABV")
-    z3.set_option(model_compress=False)
     sol.add(ne_constraints)
     todo = constraints
     progress = True

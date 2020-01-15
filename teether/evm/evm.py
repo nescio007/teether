@@ -310,6 +310,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
     ctx['CODESIZE-ADDRESS'] = len(code)
     calldata = z3.Array('CALLDATA_%d' % xid, z3.BitVecSort(256), z3.BitVecSort(8))
     calldatasize = z3.BitVec('CALLDATASIZE_%d' % xid, 256)
+    calldata_accesses = [0]
     instruction_count = 0
     state.balance += ctx_or_symbolic('CALLVALUE', ctx, xid)
 
@@ -323,6 +324,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
         if ((inclusive and len(path) == 0)
                 or (not inclusive and path == [state.pc])):
             state.success = True
+            constraints.append(z3.Or(*(z3.ULE(calldatasize, access) for access in calldata_accesses)))
             return SymbolicResult(xid, state, constraints, sha_constraints, target_op)
 
         # if not, have we reached another step of our path?
@@ -346,6 +348,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
                 if path:
                     raise IntractablePath(state.trace, path)
                 state.success = True
+                constraints.append(z3.Or(*(z3.ULE(calldatasize, access) for access in calldata_accesses)))
                 return SymbolicResult(xid, state, constraints, sha_constraints, target_op)
             elif op == 'ADD':
                 stk.append(stk.pop() + stk.pop())
@@ -553,6 +556,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
             elif op == 'CALLDATALOAD':
                 s0 = stk.pop()
                 constraints.append(z3.UGE(calldatasize, s0 + 32))
+                calldata_accesses.append(s0+32)
                 if not concrete(s0):
                     constraints.append(z3.ULT(s0, MAX_CALLDATA_SIZE))
                 stk.append(z3.Concat([calldata[s0 + i] for i in range(32)]))
@@ -561,6 +565,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
             elif op == 'CALLDATACOPY':
                 mstart, dstart, size = stk.pop(), stk.pop(), stk.pop()
                 constraints.append(z3.UGE(calldatasize, dstart + size))
+                calldata_accesses.append(dstart+size)
                 if not concrete(dstart):
                     constraints.append(z3.ULT(dstart, MAX_CALLDATA_SIZE))
                 if concrete(size):
@@ -783,6 +788,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
             state.success = True
             if path:
                 raise IntractablePath(state.trace, path)
+            constraints.append(z3.Or(*(z3.ULE(calldatasize, access) for access in calldata_accesses)))
             return SymbolicResult(xid, state, constraints, sha_constraints, target_op)
         # Revert opcode (Metropolis)
         elif op == 'REVERT':
@@ -792,6 +798,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
             mem.extend(s0, s1)
             if path:
                 raise IntractablePath(state.trace, path)
+            constraints.append(z3.Or(*(z3.ULE(calldatasize, access) for access in calldata_accesses)))
             return SymbolicResult(xid, state, constraints, sha_constraints, target_op)
         # SELFDESTRUCT opcode (also called SELFDESTRUCT)
         elif op == 'SELFDESTRUCT':
@@ -799,6 +806,7 @@ def run_symbolic(program, path, code=None, state=None, ctx=None, inclusive=False
             state.success = True
             if path:
                 raise IntractablePath(state.trace, path)
+            constraints.append(z3.Or(*(z3.ULE(calldatasize, access) for access in calldata_accesses)))
             return SymbolicResult(xid, state, constraints, sha_constraints, target_op)
 
         state.pc += 1
