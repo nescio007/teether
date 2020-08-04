@@ -2,8 +2,6 @@
 import logging
 import sys
 
-from teether.cfg.cfg import CFG
-from teether.cfg.disassembly import generate_BBs_recursive
 from teether.evm.exceptions import ExternalData, VMException
 from teether.memory import resolve_all_memory
 from teether.project import Project
@@ -16,10 +14,10 @@ def extract_contract_code(code):
     :param code: deployment code (as output)
     :return: code of deployed contract
     """
-    icfg = CFG(generate_BBs_recursive(code), fix_xrefs=True)
-    p = Project(code, cfg=icfg)
-    returns = icfg.filter_ins('RETURN')
-    memory_infos = resolve_all_memory(icfg, code)
+    p = Project(code)
+    p.cfg.trim()
+    returns = p.cfg.filter_ins('RETURN')
+    memory_infos = resolve_all_memory(p.cfg, code)
     for r in returns:
         if not r in memory_infos:
             continue

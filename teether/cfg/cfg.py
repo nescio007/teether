@@ -138,6 +138,13 @@ class CFG(object):
         s += '}'
         return s
 
+    def trim(self):
+        keep = set(self.root.descendants)
+        self.bbs = [bb for bb in self.bbs if bb.start in keep]
+        delete = set(self._bb_at.keys()) - keep
+        for addr in delete:
+            del self._bb_at[addr]
+
     def to_json(self):
         return {'bbs': [{'start': bb.start,
                          'succs': [{'start': succ.start, 'paths': list(succ.pred_paths[bb])} for succ in
