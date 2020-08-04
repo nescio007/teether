@@ -50,32 +50,32 @@ def generate_BBs(code):
 def generate_BBs_recursive(code):
     resolve_later = []
     bbs = dict()
-    todo = deque([(None, 0)])
+    todo = deque([(None, None, 0)])
     valid_jump_targets = [i for i, c in enumerate(code) if c == 0x5b]
     while True:
         if not todo:
             new_links = False
             for bb in resolve_later:
                 _, new_succs = bb.get_succ_addrs_full(valid_jump_targets)
-                for _, s in new_succs:
+                for p, s in new_succs:
                     new_links = True
-                    todo.append((bb.start, s))
+                    todo.append((bb.start, p, s))
             if not new_links:
                 break
-        p, i = todo.popleft()
-        pred = bbs[p] if p is not None else None
+        pred_addr, pred_path, bb_addr = todo.popleft()
+        pred = bbs[pred_addr] if pred_addr is not None else None
 
-        if i in bbs:
-            bb = bbs[i]
+        if bb_addr in bbs:
+            bb = bbs[bb_addr]
         else:
-            if i >= len(code):
+            if bb_addr >= len(code):
                 continue
 
-            if pred and i != pred.ins[-1].next_addr and code[i] != 0x5b:
+            if pred and bb_addr != pred.ins[-1].next_addr and code[bb_addr] != 0x5b:
                 # logging.info('WARNING, ILLEGAL JUMP-TARGET %x for BB @ %x'%(i, pred.start))
                 continue
 
-            instructions = list(disass(code, i))
+            instructions = list(disass(code, bb_addr))
             if not instructions:
                 continue
 
@@ -83,16 +83,15 @@ def generate_BBs_recursive(code):
             bbs[bb.start] = bb
             for s in bb.get_succ_addrs(valid_jump_targets):
                 # logging.info('Link from %x to %x', bb.start, s)
-                todo.append((bb.start, s))
+                todo.append((bb.start, {bb.start}, s))
             if not bb.jump_resolved:
                 resolve_later.append(bb)
 
         if pred:
-            if p != pred.start or i != bb.start:
+            if pred_addr != pred.start or bb_addr != bb.start:
                 logging.info('WEIRD SHIT')
-                logging.info('p=%x, i=%x, pred=%x, bb=%x' % (p, i, pred.start, bb.start))
+                logging.info('p=%x, i=%x, pred=%x, bb=%x' % (pred_addr, bb_addr, pred.start, bb.start))
                 pass
-            bb.pred.add(pred)
-            pred.succ.add(bb)
+            pred.add_succ(bb, pred_path)
 
     return bbs.values()
