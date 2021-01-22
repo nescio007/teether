@@ -70,7 +70,7 @@ class ForwardExplorer(object):
         avoid = frozenset(avoid)
         slices = tuple(tuple(i for i in s if i.bb) for s in slices)
         if not slices:
-            raise StopIteration
+            return
         # distance from a BB to instruction
         for slice in slices:
             for i in slice:
