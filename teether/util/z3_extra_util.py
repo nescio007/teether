@@ -4,7 +4,7 @@ import z3
 
 
 def to_bytes(v):
-    return v.as_long().to_bytes(length=(v.size()+7)//8, byteorder='big')
+    return v.as_long().to_bytes(length=(v.size() + 7) // 8, byteorder='big')
 
 
 def get_vars(f, rs=set()):
