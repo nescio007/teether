@@ -5,7 +5,7 @@ setup(
     version='0.1.9',
     packages=find_packages(),
     install_requires=[
-        'z3-solver>=4.8.5.0',
+        'z3-solver>=4.8.10.0',
         'pysha3>=1.0.2'
     ],
     scripts=[

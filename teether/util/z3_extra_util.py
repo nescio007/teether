@@ -76,7 +76,7 @@ def concrete(v):
 
 
 def is_false(cond):
-    s = z3.SolverFor("QF_ABV")
+    s = get_solver()
     s.add(cond)
     return s.check() == z3.unsat
 
@@ -159,3 +159,8 @@ def get_sha_subst_non_recursive(f, sha_ids):
     end = timeit.default_timer()
     # logging.info("get_sha_subst_non_recursive took %d microseconds (%d subexpressions)", (end-start)*1000000.0, subexprcount)
     return rs
+
+
+def get_solver():
+    z3.set_param('rewriter.blast_select_store', True)
+    return z3.SolverFor('QF_ABV')

@@ -8,7 +8,7 @@ from z3 import z3, z3util
 from teether.evm.exceptions import IntractablePath
 from teether.evm.state import SymRead, concrete
 from teether.util.utils import big_endian_to_int, sha3
-from teether.util.z3_extra_util import get_vars_non_recursive, to_bytes, simplify_non_const_hashes
+from teether.util.z3_extra_util import get_vars_non_recursive, to_bytes, simplify_non_const_hashes, get_solver
 
 
 class UnresolvedConstraints(Exception):
@@ -114,7 +114,7 @@ def check_model_and_resolve(constraints, sha_constraints):
 def check_model_and_resolve_inner(constraints, sha_constraints, second_try=False):
     # logging.debug('-' * 32)
     extra_constraints = []
-    s = z3.SolverFor("QF_ABV")
+    s = get_solver()
     s.add(constraints)
     if s.check() != z3.sat:
         raise IntractablePath("CHECK", "MODEL")
@@ -129,7 +129,7 @@ def check_model_and_resolve_inner(constraints, sha_constraints, second_try=False
                     sha_constraints[a].size() != sha_constraints[b].size()):
                 ne_constraints.append(a != b)
                 continue
-            s = z3.SolverFor("QF_ABV")
+            s = get_solver()
             s.add(constraints + ne_constraints + extra_constraints + [a != b, symread_neq(sha_constraints[a],
                                                                                           sha_constraints[b])])
             check_result = s.check()
@@ -160,7 +160,7 @@ def check_and_model(constraints, sha_constraints, ne_constraints, second_try=Fal
     # logging.debug(' ' * 16 + '-' * 16)
 
     unresolved = set(sha_constraints.keys())
-    sol = z3.SolverFor("QF_ABV")
+    sol = get_solver()
     sol.add(ne_constraints)
     todo = constraints
     progress = True
